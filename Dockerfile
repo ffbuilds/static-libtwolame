@@ -6,9 +6,10 @@ ARG TWOLAME_VERSION=0.4.0
 ARG TWOLAME_URL="https://github.com/njh/twolame/releases/download/$TWOLAME_VERSION/twolame-$TWOLAME_VERSION.tar.gz"
 ARG TWOLAME_SHA256=cc35424f6019a88c6f52570b63e1baf50f62963a3eac52a03a800bb070d7c87d
 
-# bump: alpine /FROM alpine:([\d.]+)/ docker:alpine|^3
-# bump: alpine link "Release notes" https://alpinelinux.org/posts/Alpine-$LATEST-released.html
-FROM alpine:3.16.2 AS base
+# Must be specified
+ARG ALPINE_VERSION
+
+FROM alpine:${ALPINE_VERSION} AS base
 
 FROM base AS download
 ARG TWOLAME_URL
@@ -30,9 +31,14 @@ COPY --from=download /tmp/twolame/ /tmp/twolame/
 WORKDIR /tmp/twolame
 RUN \
   apk add --no-cache --virtual build \
-    build-base && \
+    build-base pkgconf && \
   ./configure --disable-shared --enable-static --disable-sndfile --with-pic && \
   make -j$(nproc) install && \
+  # Sanity tests
+  pkg-config --exists --modversion --path twolame && \
+  ar -t /usr/local/lib/libtwolame.a && \
+  readelf -h /usr/local/lib/libtwolame.a && \
+  # Cleanup
   apk del build
 
 FROM scratch
