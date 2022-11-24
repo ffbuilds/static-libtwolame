@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 
 # bump: twolame /TWOLAME_VERSION=([\d.]+)/ https://github.com/njh/twolame.git|*
 # bump: twolame after ./hashupdate Dockerfile TWOLAME $LATEST
